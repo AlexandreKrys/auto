@@ -1,0 +1,144 @@
+--
+-- Programme à compléter
+with Auto, GAda.text_IO;
+use Auto;
+
+
+procedure Mission7 is
+package T renames GAda.text_IO;
+
+
+   function limiter_vitesse(Limite : float; Securite : integer) return integer is
+   depassement : integer;
+   begin
+   depassement := 0;
+   fixer_destination(1.45, 43.54);
+   Regler_mode(false);
+   while not arrivee loop
+
+    if vitesse > Limite then
+         depassement := depassement +1;
+         if depassement >= Securite then
+             Regler_mode(true);
+        end if;
+    end if;
+
+    attend_Ms;
+    end loop;
+
+   return depassement;
+    
+   end limiter_vitesse;
+
+   procedure tester_limiter_vitesse (Seuil_vitesse : Float; Seuil_securite : Integer) is
+   begin
+   T.put_line("Seuil_vitesse =" & float'image(Seuil_vitesse) & " km/h");
+   T.put_line("Seuil_securite =" & integer'image(Seuil_securite) & " depassement");
+   T.put_line("Nbre de depassement =" & integer'image(limiter_vitesse(Seuil_vitesse, Seuil_securite)));
+   end tester_limiter_vitesse;
+
+    procedure Afficher_Action (vit : float; act : T_action) is
+    begin
+    T.put_line("Vitesse = " & integer'image(integer(vit)) & " km/h");
+    T.put_line("Direction = " & integer'image(integer(act.Direction)) & " degres");
+    T.put_line("Acceleration = " & integer'image(act.Accelere));
+    T.put_line("Freinage = " & integer'image(act.Freinage));
+    if act.urgence then
+    T.put_line("--- Urgence !!! ---");
+    end if;
+    end Afficher_Action;
+
+    procedure tester_affichage is
+    begin
+    fixer_destination(-1.12, 40.31);
+    for i in 1..10 loop
+    Afficher_Action(vitesse, action_courante);
+    attend_Ms;
+    end loop;
+    end tester_affichage;
+
+    function vitesse_moyenne (mesures : Integer) return Float is
+    total : float :=0.0;
+    begin
+    
+    for i in 1..mesures loop
+    total := total + vitesse;
+    attend_Ms;
+    end loop;
+    return total/float(mesures);
+    end vitesse_moyenne;
+
+function Data_vitesse (mesures : Integer) return float is
+vit_max : float :=0.0;
+date_vit_max : float := 0.0;
+
+begin
+for i in 1..mesures loop
+if vitesse > vit_max then
+vit_max := vitesse;
+date_vit_max := date;
+end if;
+attend_Ms;
+end loop;
+return date_vit_max;
+end Data_vitesse;
+
+function vitesse_min return float is
+vit_min : float := 10.0;
+begin
+
+while not arrivee loop
+if vitesse < vit_min then
+vit_min := vitesse;
+end if;
+attend_ms;
+end loop;
+return vit_min;
+end vitesse_min;
+   
+ type T_stats is record
+    moy : float;
+    max : integer;
+    min : integer;
+    urgences : integer;
+    end record;
+
+function Acceleration_stats (dir_abs : float; mesures : integer ) return T_stats is
+stats : T_stats;
+act : T_action;
+acc_max : integer :=0;
+acc_min : integer := 10;
+moy_accelaration : float := 0.0;
+m : integer := 0;
+begin
+
+stats := (0.0, 0, 0, 0);
+for i in 1..mesures loop
+act := action_courante;
+if act.urgence then
+stats.urgences := stats.urgences + 1;
+end if;
+if act.Freinage = 0 and abs(act.Direction)>=abs(dir_abs) then
+    if act.accelere < acc_min then
+        acc_min := act.Accelere;
+    end if;
+    if acc_max < act.accelere then
+        acc_max := act.accelere;
+    end if;
+    moy_accelaration := moy_accelaration + float(act.Accelere);
+    m := m+1;
+end if;
+attend_Ms;
+end loop;
+stats.moy := moy_accelaration/float(m);
+stats.max := acc_max;
+stats.min := acc_min;
+
+return stats;
+end Acceleration_stats;
+statistics : T_stats;
+begin
+  fixer_destination(-0.2, 41.63);
+  statistics := Acceleration_stats(4.0, 22);
+  T.put(integer'image(statistics.max)&integer'image(statistics.min)&integer'image(statistics.urgences)&float'image(statistics.moy));
+end Mission7 ;
